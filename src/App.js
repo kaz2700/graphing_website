@@ -10,6 +10,14 @@ function App() {
     setValue(e.target.value);
   };
 
+  function handleScroll(event) {
+    if(event.deltaY > 0) {
+      setValue(x_zoom + 0.1);
+    } else {
+      setValue(x_zoom - 0.1);
+    }
+  }
+
   useEffect(() => {
     const canvas = document.getElementById("my_canvas");
     const devicePixelRatio = window.devicePixelRatio || 1;
@@ -95,7 +103,7 @@ function App() {
       />
       <p className="text-center mt-4">Value: {x_zoom}</p>
     </div>
-    <canvas style={{width: "100vw", height: "100vh", position: "absolute", zIndex: 0}} id="my_canvas"></canvas>
+    <canvas onWheel={handleScroll} style={{width: "100vw", height: "100vh", position: "absolute", zIndex: 0}} id="my_canvas"></canvas>
 
     </>
   );
