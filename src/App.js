@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import './App.css';
 import { WebglPlot, WebglLine, ColorRGBA } from "webgl-plot";
+const math = require('mathjs');
+
 
 function App() {
 
+  const [funcion, setFuncion] = useState("x");
   const [x_zoom, setValue] = useState(1); // Initial value
   
   const handleChange = (e) => {
@@ -32,8 +35,8 @@ function App() {
     const line = new WebglLine(color, canvas.width);
 
     const wglp = new WebglPlot(canvas);
-    line.arrangeX();
     wglp.addLine(line);
+    line.arrangeX();
 
     function drawAxis() {
       const xLine = new WebglLine(gridColor, 2);
@@ -55,10 +58,12 @@ function App() {
       ctx.scale(2, 2);
       ctx.font = "15px serif";
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-      for(let i = -number_of_numbers; i < number_of_numbers+1; i++) {
+      for (let i = 0; i < line.numPoints; i++) {
+        //var x = -1 + 2/line.numPoints * i
         ctx.fillText(Math.floor(i/x_zoom*100)/100, (i+number_of_numbers)*(canvas.width/(number_of_numbers*2)), canvas.height/2+15);
-          //ctx.fillText(i/x_zoom, (i+number_of_numbers)*(canvas.width/(number_of_numbers*2)), canvas.height/2+15);
-      }      
+          if(i === 0) continue;
+        ctx.fillText(Math.floor(i/x_zoom*100)/100, canvas.width/2+15, (i*proportion+number_of_numbers)*(canvas.height/(number_of_numbers*2)));
+      }
     }
 
     function drawGrid() {
@@ -104,20 +109,50 @@ function App() {
     requestAnimationFrame(newFrame);
 
     async function update() {
-      const amp = 0.005;
-      for (let i = canvas.width/2; i < line.numPoints; i++) {
-        //const ySin = ((i - line.numPoints/2)*freq)**2;
-        //const ySin = Math.sin(Math.PI * (i) * freq * Math.PI * 2 * 1/value);
-        const ySin = amp *Math.sin((i-canvas.width/2)/x_zoom)
-        line.setY(i, ySin * x_zoom * proportion);
-        line.setY(canvas.width - i, -1 * ySin * x_zoom * proportion);
+      for (let i = 0; i < line.numPoints; i++) {
+        const multiplier = 1;
+        line.setY(i, -1 + 2/line.numPoints * i);
+        line.setY(i, 1/multiplier *math_function(i, funcion, "x", multiplier));
       }
     }
-  }, [x_zoom])
+
+    function evaluateExpression(expression, variable, value) {
+      try {
+          // Create a scope with the variable set to the specified value
+          const scope = {};
+          scope[variable] = value;
+  
+          // Parse and evaluate the expression
+          const result = math.evaluate(expression, scope);
+  
+          return result;
+      } catch (error) {
+          console.error('Error evaluating expression:', error);
+          return null;
+      }
+    }
+
+    function math_function(i, expression, variable, multiplier) {
+      var value = 1/multiplier * (-1 + 2/line.numPoints * i) //es la x (o la letra elegida como variable) pero corregida por q i va por pixeles y empieza desde el centro de la pantalla, se va a usar para evaluar la funcion en ese punto
+      const result = multiplier * evaluateExpression(expression, variable, value);
+      return result;
+    }
+  }, [x_zoom, funcion])
+
+  function runnit(event) {
+    setFuncion(event.target.value)
+    console.log("successful")
+  }
 
   return (
     <>
     <div className="w-64 mx-auto mt-8" style={{position: "absolute", zIndex: 2}}>
+    <input 
+        className="text-box"
+            type="text"
+            placeholder="Input a function"
+            onChange={(event) => {runnit(event)}}
+      />
       <input
         type="range"
         min="0.01"
@@ -127,7 +162,7 @@ function App() {
         onChange={handleChange}
         className="slider-thumb"
       />
-      <p className="text-center mt-4">Value: {x_zoom}</p>
+      Value: {x_zoom}
     </div>
     <canvas onWheel={handleScroll} style={{width: "100vw", height: "100vh", position: "absolute", zIndex: 0}} id="my_canvas"></canvas>
     <canvas id="text" style={{width: "100vw", height: "100vh", position: "absolute", zIndex: 1}}></canvas>
