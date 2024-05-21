@@ -6,8 +6,9 @@ const math = require('mathjs');
 
 function App() {
 
-  const [funcion, setFuncion] = useState("x");
+  const [funcion, setFuncion] = useState("0");
   const [x_zoom, setValue] = useState(1); // Initial value
+  const [keepUpdating, setKeepUpdating] = useState(true);
   
   const handleChange = (e) => {
     setValue(e.target.value);
@@ -104,16 +105,22 @@ function App() {
     function newFrame() {
       update();
       wglp.update();
-      requestAnimationFrame(newFrame);
+      //requestAnimationFrame(newFrame);
     }
-    requestAnimationFrame(newFrame);
+
+    requestAnimationFrame(newFrame)
 
     async function update() {
       for (let i = 0; i < line.numPoints; i++) {
-        const multiplier = 1;
+        if(!keepUpdating) {
+            console.log("broke boi");
+            break;
+        }
+        const multiplier = 0.5;
         line.setY(i, -1 + 2/line.numPoints * i);
-        line.setY(i, 1/multiplier *math_function(i, funcion, "x", multiplier));
+        line.setY(i, 1/multiplier * math_function(i, funcion, "x", multiplier));
       }
+      setKeepUpdating(true);
     }
 
     function evaluateExpression(expression, variable, value) {
@@ -124,10 +131,10 @@ function App() {
   
           // Parse and evaluate the expression
           const result = math.evaluate(expression, scope);
-  
           return result;
       } catch (error) {
-          console.error('Error evaluating expression:', error);
+          //console.error('Error evaluating expression:', error);
+          setKeepUpdating(false);
           return null;
       }
     }
@@ -141,7 +148,7 @@ function App() {
 
   function runnit(event) {
     setFuncion(event.target.value)
-    console.log("successful")
+    console.log("Successful")
   }
 
   return (
