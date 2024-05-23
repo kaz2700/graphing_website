@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react';
 import './App.css';
 import { WebglPlot, WebglLine, ColorRGBA } from "webgl-plot";
 const math = require('mathjs');
+var keepUpdating = false;
 
 
 function App() {
 
   const [funcion, setFuncion] = useState("0");
   const [x_zoom, setValue] = useState(1); // Initial value
-  const [keepUpdating, setKeepUpdating] = useState(true);
   
   const handleChange = (e) => {
     setValue(e.target.value);
@@ -113,14 +113,19 @@ function App() {
     async function update() {
       for (let i = 0; i < line.numPoints; i++) {
         if(!keepUpdating) {
-            console.log("broke boi");
             break;
         }
         const multiplier = 0.5;
         line.setY(i, -1 + 2/line.numPoints * i);
-        line.setY(i, 1/multiplier * math_function(i, funcion, "x", multiplier));
+
+        try {        
+          line.setY(i, 1/multiplier * math_function(i, funcion, "x", multiplier));
+        } catch (error) {
+          console.log(error, "aaaa", keepUpdating)
+          return;
+        }
       }
-      setKeepUpdating(true);
+      keepUpdating = true;
     }
 
     function evaluateExpression(expression, variable, value) {
@@ -133,8 +138,8 @@ function App() {
           const result = math.evaluate(expression, scope);
           return result;
       } catch (error) {
-          //console.error('Error evaluating expression:', error);
-          setKeepUpdating(false);
+          console.error('Error evaluating expression:', error);
+          keepUpdating = false;
           return null;
       }
     }
@@ -148,7 +153,6 @@ function App() {
 
   function runnit(event) {
     setFuncion(event.target.value)
-    console.log("Successful")
   }
 
   return (
