@@ -69,33 +69,27 @@ function App() {
 
     function drawGrid() {
       writeNumbers();
-      const separation = 650;
-      const number_of_lines_x = 8;
-      const number_of_lines_y = Math.round(number_of_lines_x * proportion);
+      const number_of_lines = 8;
+      const separation = 0.1;
+      console.log(canvas.width)
       const gridColor = new ColorRGBA(0, 0, 0, 0.5);
       const gridColor_2 = new ColorRGBA(0, 0, 0, 0.75);
-      for (let i = -number_of_lines_x; i < number_of_lines_x; i++) {
+      for (let i = -number_of_lines; i < number_of_lines; i++) {
         let chosenColor = gridColor;
         if((i+1)%3 === 0) {
           chosenColor = gridColor_2;
         }
-        const aNewLine = new WebglLine(chosenColor, 2);
-        aNewLine.setX(0, -1);
-        aNewLine.setX(1, 1);
-        aNewLine.offsetY = (i+1) * canvas.height/(separation * number_of_lines_x);
-        wglp.addLine(aNewLine);
-      }
-
-      for (let i = -number_of_lines_y; i < number_of_lines_y; i++) {
-        let chosenColor = gridColor;
-        if((i+1)%3 === 0) {
-          chosenColor = gridColor_2;
-        }
-        const aNewLine = new WebglLine(chosenColor, 2);
-        aNewLine.setY(0, -1);
-        aNewLine.setY(1, 1);
-        aNewLine.offsetX = (i+1) * canvas.height/(separation * number_of_lines_y);
-        wglp.addLine(aNewLine);
+        const horizontalLine = new WebglLine(chosenColor, 2);
+        horizontalLine.setX(0, -1);
+        horizontalLine.setX(1, 1);
+        horizontalLine.offsetY = (i+1) * separation * proportion;
+        wglp.addLine(horizontalLine);
+      
+        const verticalLine = new WebglLine(chosenColor, 2);
+        verticalLine.setY(0, -1);
+        verticalLine.setY(1, 1);
+        verticalLine.offsetX = (i+1)*  (separation);
+        wglp.addLine(verticalLine);
       }
     }
 
@@ -115,11 +109,12 @@ function App() {
         if(!keepUpdating) {
             break;
         }
-        const multiplier = 0.5;
+        const fixConstant = 0.1
+        const multiplier = 1;
         line.setY(i, -1 + 2/line.numPoints * i);
 
         try {        
-          line.setY(i, 1/multiplier * math_function(i, funcion, "x", multiplier));
+          line.setY(i, canvas.width/canvas.height * math_function(i, funcion, "x", fixConstant * multiplier));
         } catch (error) {
           console.log(error, "aaaa", keepUpdating)
           return;
