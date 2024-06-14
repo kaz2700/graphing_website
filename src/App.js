@@ -53,23 +53,23 @@ function App() {
       yLine.setY(1, 1)
     }
 
-    function writeNumbers() {
-      const number_of_numbers = 5;
+    function writeNumbers(number_of_lines) {
+      const number_of_numbers = number_of_lines;
       var ctx = textCanvas.getContext("2d");
       ctx.scale(2, 2);
       ctx.font = "15px serif";
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-      for (let i = 0; i < line.numPoints; i++) {
+      for (let i = -line.numPoints; i < line.numPoints; i++) {
         //var x = -1 + 2/line.numPoints * i
         ctx.fillText(Math.floor(i/x_zoom*100)/100, (i+number_of_numbers)*(canvas.width/(number_of_numbers*2)), canvas.height/2+15);
           if(i === 0) continue;
-        ctx.fillText(Math.floor(i/x_zoom*100)/100, canvas.width/2+15, (i*proportion+number_of_numbers)*(canvas.height/(number_of_numbers*2)));
+        ctx.fillText(-Math.floor(i/x_zoom*100)/100, canvas.width/2+15, (i*proportion+number_of_numbers)*(canvas.height/(number_of_numbers*2)));
       }
     }
 
     function drawGrid() {
-      writeNumbers();
-      const number_of_lines = 8;
+      const number_of_lines = 10;
+      writeNumbers(number_of_lines);
       const separation = 0.1;
       console.log(canvas.width)
       const gridColor = new ColorRGBA(0, 0, 0, 0.5);
