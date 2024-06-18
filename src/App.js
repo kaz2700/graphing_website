@@ -6,19 +6,18 @@ var keepUpdating = false;
 
 
 function App() {
-
+  const sensibility = 0.1;
   const [funcion, setFuncion] = useState("0");
   const [x_zoom, setValue] = useState(1); // Initial value
-  
-  const handleChange = (e) => {
-    setValue(e.target.value);
+  const handleChange = (event) => {
+    setValue(event.target.value);
   };
 
-  function handleScroll(event) {
+  function handleScroll(event) { //todo not allow to go under 0
     if(event.deltaY > 0) {
-      setValue(x_zoom + 0.1);
+      setValue(x_zoom + 1*sensibility);
     } else {
-      setValue(x_zoom - 0.1);
+      setValue(x_zoom - 1*sensibility);
     }
   }
 
@@ -60,35 +59,41 @@ function App() {
       ctx.font = "15px serif";
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       for (let i = -line.numPoints; i < line.numPoints; i++) {
-        //var x = -1 + 2/line.numPoints * i
-        ctx.fillText(Math.floor(i/x_zoom*100)/100, (i+number_of_numbers)*(canvas.width/(number_of_numbers*2)), canvas.height/2+15);
-          if(i === 0) continue;
-        ctx.fillText(-Math.floor(i/x_zoom*100)/100, canvas.width/2+15, (i*proportion+number_of_numbers)*(canvas.height/(number_of_numbers*2)));
+        //y axis
+        ctx.fillText(-Math.floor(i/x_zoom*100)/100, canvas.width/2-15, ((i*proportion+number_of_numbers)*(canvas.height/(number_of_numbers*2))+15)); //todo zoom
+      
+        //x axis
+        if(i === 0) continue;
+        ctx.fillText(Math.floor(i/x_zoom*100)/100, (i+number_of_numbers)*(canvas.width/(number_of_numbers*2))-5, canvas.height/2+15);
       }
     }
 
     function drawGrid() {
-      const number_of_lines = 10;
-      writeNumbers(number_of_lines);
+      const number_of_unit_lines = 10;
+      writeNumbers(number_of_unit_lines);
+      const lines_per_unit = 3;
       const separation = 0.1;
-      console.log(canvas.width)
       const gridColor = new ColorRGBA(0, 0, 0, 0.5);
       const gridColor_2 = new ColorRGBA(0, 0, 0, 0.75);
+
+      const number_of_lines = number_of_unit_lines*lines_per_unit;
+
       for (let i = -number_of_lines; i < number_of_lines; i++) {
         let chosenColor = gridColor;
         if((i+1)%3 === 0) {
           chosenColor = gridColor_2;
         }
+
         const horizontalLine = new WebglLine(chosenColor, 2);
         horizontalLine.setX(0, -1);
         horizontalLine.setX(1, 1);
-        horizontalLine.offsetY = (i+1) * separation * proportion;
+        horizontalLine.offsetY = (i+1) * separation/lines_per_unit * proportion * x_zoom;
         wglp.addLine(horizontalLine);
       
         const verticalLine = new WebglLine(chosenColor, 2);
         verticalLine.setY(0, -1);
         verticalLine.setY(1, 1);
-        verticalLine.offsetX = (i+1)*  (separation);
+        verticalLine.offsetX = (i+1) * separation/lines_per_unit * x_zoom;
         wglp.addLine(verticalLine);
       }
     }
@@ -110,17 +115,22 @@ function App() {
             break;
         }
         const fixConstant = 0.1
-        const multiplier = 1;
         line.setY(i, -1 + 2/line.numPoints * i);
 
         try {        
-          line.setY(i, canvas.width/canvas.height * math_function(i, funcion, "x", fixConstant * multiplier));
+          line.setY(i, canvas.width/canvas.height * math_function(i, funcion, "x", fixConstant * x_zoom));
         } catch (error) {
           console.log(error, "aaaa", keepUpdating)
           return;
         }
       }
       keepUpdating = true;
+    }
+
+    function math_function(i, expression, variable, multiplier) {
+      var value = 1/multiplier * (-1 + 2/line.numPoints * i) //es la x (o la letra elegida como variable) pero corregida por q i va por pixeles y empieza desde el centro de la pantalla, se va a usar para evaluar la funcion en ese punto
+      const result = multiplier * evaluateExpression(expression, variable, value);
+      return result;
     }
 
     function evaluateExpression(expression, variable, value) {
@@ -137,12 +147,6 @@ function App() {
           keepUpdating = false;
           return null;
       }
-    }
-
-    function math_function(i, expression, variable, multiplier) {
-      var value = 1/multiplier * (-1 + 2/line.numPoints * i) //es la x (o la letra elegida como variable) pero corregida por q i va por pixeles y empieza desde el centro de la pantalla, se va a usar para evaluar la funcion en ese punto
-      const result = multiplier * evaluateExpression(expression, variable, value);
-      return result;
     }
   }, [x_zoom, funcion])
 
@@ -162,7 +166,7 @@ function App() {
       <input
         type="range"
         min="0.01"
-        max="30"
+        max="100"
         step="0.05"
         value={x_zoom}
         onChange={handleChange}
@@ -170,8 +174,8 @@ function App() {
       />
       Value: {x_zoom}
     </div>
-    <canvas onWheel={handleScroll} style={{width: "100vw", height: "100vh", position: "absolute", zIndex: 0}} id="my_canvas"></canvas>
-    <canvas id="text" style={{width: "100vw", height: "100vh", position: "absolute", zIndex: 1}}></canvas>
+    <canvas onWheel={handleScroll} style={{width: "100vw", height: "100vh", position: "absolute", zIndex: 1}} id="my_canvas"></canvas>
+    <canvas id="text" style={{width: "100vw", height: "100vh", position: "absolute", zIndex: 0}}></canvas>
     </>
   );
 }
